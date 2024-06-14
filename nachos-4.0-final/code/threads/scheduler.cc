@@ -33,6 +33,23 @@
 
 //<TODO>
 // Declare sorting rule of SortedList for L1 & L2 ReadyQueue
+static int L1ReadyQueueSortingRule(Thread *a, Thread *b) {
+    if (a->GetRemainingBurstTime() < b->GetRemainingBurstTime())
+        return -1;
+    else if (a->GetRemainingBurstTime() > b->GetRemainingBurstTime())
+        return 1;
+    else
+        return 0;
+}
+
+static int L2ReadyQueueSortingRule(Thread *a, Thread *b) {
+    if (a->GetThreadID() < b->GetThreadID())
+        return -1;
+    else if (a->GetThreadID() > b->GetThreadID())
+        return 1;
+    else
+        return 0;
+}
 // Hint: Funtion Type should be "static int"
 //<TODO>
 
@@ -42,6 +59,9 @@ Scheduler::Scheduler()
     // readyList = new List<Thread *>; 
     //<TODO>
     // Initialize L1, L2, L3 ReadyQueue
+    L1ReadyQueue = new SortedList<Thread *>(L1ReadyQueueSortingRule);
+    L2ReadyQueue = new SortedList<Thread *>(L2ReadyQueueSortingRule);
+    L3ReadyQueue = new List<Thread *>();
     //<TODO>
 	toBeDestroyed = NULL;
 } 
@@ -55,6 +75,9 @@ Scheduler::~Scheduler()
 { 
     //<TODO>
     // Remove L1, L2, L3 ReadyQueue
+    delete L1ReadyQueue;
+    delete L2ReadyQueue;
+    delete L3ReadyQueue;
     //<TODO>
     // delete readyList; 
 } 
@@ -79,6 +102,19 @@ Scheduler::ReadyToRun (Thread *thread)
     // After inserting Thread into ReadyQueue, don't forget to reset some values.
     // Hint: L1 ReadyQueue is preemptive SRTN(Shortest Remaining Time Next).
     // When putting a new thread into L1 ReadyQueue, you need to check whether preemption or not.
+    int priority = thread->GetPriority();
+    if (priority >= 100 && priority <= 149) {
+        L1ReadyQueue->Insert(thread);
+        //not sure if correct
+        if (thread->GetRemainingBurstTime() < kernel->currentThread->GetRemainingBurstTime()) {
+            kernel->interrupt->YieldOnReturn();
+        }
+    } else if (priority >= 50 && priority <= 99) {
+        L2ReadyQueue->Insert(thread);
+    } else if (priority >= 0 && priority <= 49) {
+        L3ReadyQueue->Append(thread);
+    }
+    thread->SetStatus(READY);
     //<TODO>
     // readyList->Append(thread);
 }
@@ -104,6 +140,14 @@ Scheduler::FindNextToRun ()
 
     //<TODO>
     // a.k.a. Find Next (Thread in ReadyQueue) to Run
+    if (!L1ReadyQueue->IsEmpty()) {
+        return L1ReadyQueue->RemoveFront();
+    } else if (!L2ReadyQueue->IsEmpty()) {
+        return L2ReadyQueue->RemoveFront();
+    } else if (!L3ReadyQueue->IsEmpty()) {
+        return L3ReadyQueue->RemoveFront();
+    }
+    return NULL;
     //<TODO>
 }
 
