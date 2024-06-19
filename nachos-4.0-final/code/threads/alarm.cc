@@ -63,7 +63,7 @@ Alarm::CallBack()
     // 2. Update RunTime & RRTime
     Thread *thread = kernel->currentThread;
     thread->setRunTime(thread->getRunTime() + TimerTicks);
-    thread->setRRTime(thread->setRRTime() + TimerTicks);
+    thread->setRRTime(thread->getRRTime() + TimerTicks);
 
     // 3. Check Round Robin
     if (kernel->currentThread->getID() > 0 && status != IdleMode && kernel->currentThread->getPriority() >= 100) {
