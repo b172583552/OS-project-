@@ -70,7 +70,7 @@ Alarm::CallBack()
     interrupt->YieldOnReturn();
     }
     if (status != IdleMode && kernel->currentThread->getPriority() < 50) {
-        if (kernel->currentThread->setRRTime() >= 200) {
+        if (kernel->currentThread->getRRTime() >= 200) {
             interrupt->YieldOnReturn();
         }
     }
