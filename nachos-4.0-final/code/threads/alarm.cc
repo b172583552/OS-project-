@@ -59,10 +59,24 @@ Alarm::CallBack()
     // In each 100 ticks, 
     
     // 1. Update Priority
-
+    Interrupt *interrupt = kernel->interrupt;
+    MachineStatus status = interrupt->getStatus();
+    kernel->scheduler->updatePriority();
     // 2. Update RunTime & RRTime
+    Thread *thread = kernel->currentThread;
+    thread->setExecutionTime(thread->getExecutionTime() + TimerTicks);
+    thread->setL3Time(thread->getL3Time() + TimerTicks);
 
     // 3. Check Round Robin
+    if (kernel->currentThread->getID() > 0 && status != IdleMode && kernel->currentThread->getPriority() >= 100) {
+    interrupt->YieldOnReturn();
+    }
+    if (status != IdleMode && kernel->currentThread->getPriority() < 50) {
+        if (kernel->currentThread->getL3Time() >= 200) {
+            interrupt->YieldOnReturn();
+        }
+    }
+
 
     //<TODO>
     
