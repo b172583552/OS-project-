@@ -37,7 +37,9 @@ UserProgKernel::UserProgKernel(int argc, char **argv)
 		//<TODO>
         // Get execfile & its priority & burst time from argv, then save them.
 		else if (strcmp(argv[i], "-epb") == 0) {
-
+            execfile[++execfileNum] = argv[++i];
+            threadPriority[execfileNum] = atoi(argv[++i]);
+            threadRemainingBurstTime[execfileNum] = atoi(argv[++i]);
 	    }
 	    //<TODO>
 	    else if (strcmp(argv[i], "-u") == 0) {
@@ -172,8 +174,42 @@ UserProgKernel::SelfTest() {
 void
 ForkExecute(Thread *t)
 {
-    // cout << "Thread: " << (void *) t << endl;
+    cout << "Thread: " << (void *) t << endl;
     //<TODO>
+    ASSERT(t != nullptr);
+
+    // Assuming the thread object has a filename property
+    char *filename = t->filename;  // Or retrieve the filename by appropriate means
+
+    OpenFile *executable = fileSystem->Open(filename);
+    if (executable == nullptr) {
+        cout << "Unable to open file: " << filename << endl;
+        return;  // Exit if file not found
+    }
+
+    AddrSpace *space = new AddrSpace(executable);
+    if (!space->IsValid()) {
+        cout << "Failed to initialize address space from file: " << filename << endl;
+        delete executable;  // Cleanup the executable file object
+        delete space;       // Cleanup the created address space
+        return;             // Exit if failed to create valid address space
+    }
+
+    t->space = space; // Assign the address space to the thread
+
+    // Close the executable file as it is no longer needed
+    delete executable;
+
+    // Now, set the initial register values and page table for the process
+    space->InitRegisters();
+    space->RestoreState();
+
+    // Move the thread to the ready queue and make it ready to run
+    machine->Run(); // This function will not return unless there is an error
+
+    // If machine->Run returns, there was an error
+    ASSERT(FALSE);
+    
     // When Thread t goes to Running state in the first time, its file should be loaded & executed.
     // Hint: This function would not be called until Thread t is on running state.
     //<TODO>
@@ -183,9 +219,41 @@ int
 UserProgKernel::InitializeOneThread(char* name, int priority, int burst_time)
 {
     //<TODO>
+    if (threadNum >= MAX_THREADS) {  // Assume MAX_THREADS is defined somewhere
+        cerr << "Maximum number of threads reached, cannot create new thread." << endl;
+        return -1;
+    }
+
+    // Create a new thread; assume constructor sets thread to JUST_CREATED
+    t[threadNum] = new Thread(name, priority, burst_time);
+
+    // Set additional properties if needed, e.g., priority, burst time
+    t[threadNum]->SetPriority(priority);
+    t[threadNum]->SetBurstTime(burst_time);
+
+    // Load the executable file into the address space of the thread
+    OpenFile *executable = fileSystem->Open(name);
+    if (executable == nullptr) {
+        cerr << "Unable to open executable file: " << name << endl;
+        delete t[threadNum];
+        t[threadNum] = nullptr;
+        return -1;
+    }
+
+    AddrSpace *space = new AddrSpace(executable);
+    if (!space->IsValid()) {
+        cerr << "Failed to initialize address space from file: " << name << endl;
+        delete executable;
+        delete space;
+        delete t[threadNum];
+        t[threadNum] = nullptr;
+        return -1;
+    }
+
     // When each execfile comes to Exec function, Kernel helps to create a thread for it.
     // While creating a new thread, thread should be initialized, and then forked.
     t[threadNum]->space = new AddrSpace();
+    delete executable;
     t[threadNum]->Fork((VoidFunctionPtr) &ForkExecute, (void *)t[threadNum]);
     //<TODO>
 

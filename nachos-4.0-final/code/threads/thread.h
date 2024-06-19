@@ -119,6 +119,17 @@ class Thread {
     // 4. set/get RemainingBurstTime
     // 5. set/get RunTime
     // 6. set/get RRTime
+    int getID() { return ID; }
+    void setPriority(int p) { Priority = p; }
+    int getPriority() { return Priority; }
+    void setWaitTime(int w) { WaitTime = w; }
+    int getWaitTime() { return WaitTime; }
+    void setRemainingBurstTime(int r) { RemainingBurstTime = r; }
+    int getRemainingBurstTime() { return RemainingBurstTime; }
+    void setRunTime(int r) { RunTime = r; }
+    int getRunTime() { return RunTime; }
+    void setRRTime(int r) { RRTime = r; }
+    int getRRTime() { return RRTime; }
     //<TODO>
 
   private:
