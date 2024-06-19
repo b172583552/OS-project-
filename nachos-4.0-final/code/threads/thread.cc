@@ -265,7 +265,11 @@ Thread::Sleep (bool finishing)
     // In Thread::Sleep(finishing), we put the current_thread to waiting or terminated state (depend on finishing)
     // , and determine finishing on Scheduler::Run(nextThread, finishing), not here.
     // 1. Update RemainingBurstTime
+    kernel->currentThread->setRemainingBurstTime(kernel->currentThread->getRemainingBurstTime() - kernel->currentThread->RunTime);
     // 2. Reset some value of current_thread, then context switch
+    kernel->currentThread->RunTime = 0;
+
+
     kernel->scheduler->Run(nextThread, finishing);
     //<TODO>
 }

@@ -35,6 +35,7 @@
 // Declare sorting rule of SortedList for L1 & L2 ReadyQueue
 static int L1ReadyQueueSortingRule(Thread *a, Thread *b) {
     if (a->GetRemainingBurstTime() < b->GetRemainingBurstTime())
+
         return -1;
     else if (a->GetRemainingBurstTime() > b->GetRemainingBurstTime())
         return 1;
